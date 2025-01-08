@@ -4,7 +4,9 @@ const LiveChannel = () => {
   const [channels, setChannels] = useState([]); // State for channel entries
   const [newChannel, setNewChannel] = useState({
     name: "",
-    liveStream: "",
+    livestream: "",
+    origin: "",
+    referer: "",
   });
   const [showForm, setShowForm] = useState(false); // State for toggling the form
 
@@ -12,6 +14,7 @@ const LiveChannel = () => {
   useEffect(() => {
     const fetchChannels = async () => {
       try {
+        console.log(newChannel)
         const response = await fetch("https://basketball-backend-dun.vercel.app/liveChannel/get-LiveChannels");
         if (!response.ok) {
           throw new Error("Failed to fetch channels");
@@ -45,10 +48,7 @@ const LiveChannel = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: newChannel.name,
-          livestream: newChannel.liveStream, // Make sure it matches the backend schema field name
-        }),
+        body: JSON.stringify(newChannel), // Include all fields in the payload
       });
 
       if (!response.ok) {
@@ -59,7 +59,7 @@ const LiveChannel = () => {
 
       // Update state with the newly added channel
       setChannels([...channels, savedChannel]);
-      setNewChannel({ name: "", liveStream: "" });
+      setNewChannel({ name: "", livestream: "", origin: "", referer: "" });
       setShowForm(false);
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -67,25 +67,25 @@ const LiveChannel = () => {
     }
   };
 
-// Handle channel deletion
-const handleDelete = async (id) => {
-  try {
-    const response = await fetch(`https://basketball-backend-dun.vercel.app/liveChannel/liveChannel/delete-LiveChannel/${id}`, {
-      method: "DELETE",
-    });
+  // Handle channel deletion
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`https://basketball-backend-dun.vercel.app/liveChannel/liveChannel/delete-LiveChannel/${id}`, {
+        method: "DELETE",
+      });
 
-    if (!response.ok) {
-      throw new Error("Failed to delete channel");
+      if (!response.ok) {
+        throw new Error("Failed to delete channel");
+      }
+
+      // Update the state to remove the deleted channel
+      const updatedChannels = channels.filter((channel) => channel._id !== id);
+      setChannels(updatedChannels);
+    } catch (error) {
+      console.error("Error deleting channel:", error);
+      alert("Error deleting channel. Please try again.");
     }
-
-    // Update the state to remove the deleted channel
-    const updatedChannels = channels.filter((channel) => channel._id !== id);
-    setChannels(updatedChannels);
-  } catch (error) {
-    console.error("Error deleting channel:", error);
-    alert("Error deleting channel. Please try again.");
-  }
-};
+  };
 
   return (
     <div className="container">
@@ -101,13 +101,15 @@ const handleDelete = async (id) => {
           <tr>
             <th>Name</th>
             <th>Live Stream</th>
+            <th>Origin</th>
+            <th>Referer</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {channels.length === 0 ? (
             <tr>
-              <td colSpan="3" className="text-center">
+              <td colSpan="5" className="text-center">
                 No Channels Added
               </td>
             </tr>
@@ -120,6 +122,8 @@ const handleDelete = async (id) => {
                     {channel.livestream}
                   </a>
                 </td>
+                <td>{channel.origin}</td>
+                <td>{channel.referer}</td>
                 <td>
                   <button className="btn btn-danger me-2" onClick={() => handleDelete(channel._id)}>
                     <i className="fas fa-trash"></i>
@@ -156,8 +160,30 @@ const handleDelete = async (id) => {
                 <input
                   type="text"
                   className="form-control"
-                  name="liveStream"
-                  value={newChannel.liveStream}
+                  name="livestream"
+                  value={newChannel.livestream}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="mb-3">
+                <label>Origin</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="origin"
+                  value={newChannel.origin}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="mb-3">
+                <label>Referer</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="referer"
+                  value={newChannel.referer}
                   onChange={handleInputChange}
                   required
                 />
