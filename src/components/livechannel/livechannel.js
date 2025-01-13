@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from "react";
 
 const LiveChannel = () => {
-  const [channels, setChannels] = useState([]); // State for channel entries
+  const [channels, setChannels] = useState([]);
   const [newChannel, setNewChannel] = useState({
     name: "",
     livestream: "",
     origin: "",
     referer: "",
   });
-  const [showForm, setShowForm] = useState(false); // State for toggling the form
+  const [showForm, setShowForm] = useState(false);
 
   // Fetch existing channels from the backend
   useEffect(() => {
     const fetchChannels = async () => {
       try {
-        console.log(newChannel)
         const response = await fetch("https://basketball-backend-dun.vercel.app/liveChannel/get-LiveChannels");
         if (!response.ok) {
           throw new Error("Failed to fetch channels");
@@ -32,23 +31,17 @@ const LiveChannel = () => {
   // Handle input changes for the form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewChannel({
-      ...newChannel,
-      [name]: value,
-    });
+    setNewChannel({ ...newChannel, [name]: value });
   };
 
   // Handle form submission
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const response = await fetch("https://basketball-backend-dun.vercel.app/liveChannel/create-LiveChannel", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newChannel), // Include all fields in the payload
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newChannel),
       });
 
       if (!response.ok) {
@@ -56,8 +49,6 @@ const LiveChannel = () => {
       }
 
       const savedChannel = await response.json();
-
-      // Update state with the newly added channel
       setChannels([...channels, savedChannel]);
       setNewChannel({ name: "", livestream: "", origin: "", referer: "" });
       setShowForm(false);
@@ -70,20 +61,20 @@ const LiveChannel = () => {
   // Handle channel deletion
   const handleDelete = async (id) => {
     try {
+      console.log(`Deleting channel with ID: ${id}`);
       const response = await fetch(`https://basketball-backend-dun.vercel.app/liveChannel/liveChannel/delete-LiveChannel/${id}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to delete channel");
+      const responseData = await response.json();
+      if (response.ok) {
+        setChannels((prevChannels) => prevChannels.filter((channel) => channel._id !== id));
+      } else {
+        console.error("Failed to delete channel:", responseData.message);
       }
-
-      // Update the state to remove the deleted channel
-      const updatedChannels = channels.filter((channel) => channel._id !== id);
-      setChannels(updatedChannels);
     } catch (error) {
-      console.error("Error deleting channel:", error);
-      alert("Error deleting channel. Please try again.");
+      console.error("Error deleting channel:", error.message);
     }
   };
 
@@ -125,9 +116,15 @@ const LiveChannel = () => {
                 <td>{channel.origin}</td>
                 <td>{channel.referer}</td>
                 <td>
-                  <button className="btn btn-danger me-2" onClick={() => handleDelete(channel._id)}>
-                    <i className="fas fa-trash"></i>
-                  </button>
+                <button
+                className="btn btn-danger me-2"
+                onClick={() => {
+                  console.log(`Deleting channel with ID: ${channel._id}`);
+                  handleDelete(channel._id);
+                }}
+              >
+                <i className="fas fa-trash"></i>
+              </button>
                   <button className="btn btn-info">
                     <i className="fas fa-edit"></i>
                   </button>
@@ -138,7 +135,6 @@ const LiveChannel = () => {
         </tbody>
       </table>
 
-      {/* Add New Channel Form */}
       {showForm && (
         <div className="modal-overlay">
           <div className="modal-content">

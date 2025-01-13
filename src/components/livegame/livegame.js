@@ -12,8 +12,9 @@ const LiveGame = () => {
         channel: '',
         date: '',
         time: '',
-        highlights: '',
-        restriction: '',
+        live: false, // Default value for live status
+        highlights: '', // New field for highlights
+        restriction: '', // New field for restriction
     });
 
     // Fetch live games from the API
@@ -65,18 +66,18 @@ const LiveGame = () => {
         handleGetGames();
     }, []);
 
-    // Handle form submission to add a new game
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('Submitting new game:', newGame); // Debug: Check the form data
         try {
             const response = await fetch('https://basketball-backend-dun.vercel.app/liveGame/create-LiveGames', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newGame),
             });
-
+    
             const responseData = await response.json();
-
+    
             if (response.ok) {
                 console.log('Game created successfully:', responseData);
                 setGames((prevGames) => [...prevGames, responseData]);
@@ -86,7 +87,7 @@ const LiveGame = () => {
         } catch (error) {
             console.error('Error during API call:', error);
         }
-
+    
         setShowForm(false); // Hide the form
         setNewGame({
             team1: '',
@@ -97,13 +98,16 @@ const LiveGame = () => {
             time: '',
             highlights: '',
             restriction: '',
+            live: false,
         });
     };
-
-    // Handle form field changes
+   
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setNewGame({ ...newGame, [name]: value });
+        const { name, value, type, checked } = e.target;
+        setNewGame((prevState) => ({
+            ...prevState,
+            [name]: type === 'checkbox' ? checked : value,
+        }));
     };
 
     const handleDelete = async (id) => {
@@ -128,26 +132,29 @@ const LiveGame = () => {
 
     const handleFlip = async (id) => {
         try {
-            const response = await fetch(`http://localhost:8080/liveGame/liveGame/flip-LiveGame/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-            });
+            const response = await fetch(
+                `https://basketball-backend-dun.vercel.app/liveGame/liveGame/flip-LiveGame/${id}`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
 
             const responseData = await response.json();
             if (response.ok) {
-                // Flip the live state in the current games array
                 setGames((prevGames) =>
                     prevGames.map((game) =>
-                        game._id === id ? { ...game, live: !game.live } : game
+                        game._id === id ? responseData.flipGame : game
                     )
                 );
             } else {
-                console.error('Failed to toggle live state:', responseData.message);
+                console.error("Failed to toggle live state:", responseData.message);
             }
         } catch (error) {
-            console.error('Error toggling live state:', error);
+            console.error("Error toggling live state:", error);
         }
-    };
+    };    
+    
 
     return (
         <div className="live-game-container">
@@ -187,6 +194,21 @@ const LiveGame = () => {
                     <label>
                         Time: <input type="time" name="time" value={newGame.time} onChange={handleInputChange} required />
                     </label>
+                    <label>
+                        Highlights: <input type="text" name="highlights" value={newGame.highlights} onChange={handleInputChange} />
+                    </label>
+                    <label>
+                        Restriction: <input type="text" name="restriction" value={newGame.restriction} onChange={handleInputChange} />
+                    </label>
+                    <label>
+                        Live:
+                        <input
+                            type="checkbox"
+                            name="live"
+                            checked={newGame.live}
+                            onChange={handleInputChange}
+                        />
+                    </label>
                     <button type="submit">Submit</button>
                 </form>
             )}
@@ -200,6 +222,8 @@ const LiveGame = () => {
                         <th>Date</th>
                         <th>Time</th>
                         <th>Live</th>
+                        <th>Highlights</th>
+                        <th>Restriction</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -220,6 +244,8 @@ const LiveGame = () => {
                                         onChange={() => handleFlip(game._id)}
                                     />
                                 </td>
+                                <td>{game.highlights}</td>
+                                <td>{game.restriction}</td>
                                 <td>
                                     <button className="btn-delete" onClick={() => handleDelete(game._id)}>Delete</button>
                                 </td>
@@ -227,7 +253,7 @@ const LiveGame = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="8">No live games available</td>
+                            <td colSpan="10">No live games available</td>
                         </tr>
                     )}
                 </tbody>
