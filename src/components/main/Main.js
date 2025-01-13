@@ -15,7 +15,7 @@ const Main = () => {
     const fetchData = async () => {
       try {
         // Fetch total users
-        const usersResponse = await fetch("http://localhost:8080/user/users");
+        const usersResponse = await fetch("https://basketball-backend-dun.vercel.app/user/users");
         if (!usersResponse.ok) {
           throw new Error("Error fetching users");
         }
@@ -23,15 +23,15 @@ const Main = () => {
         setTotalUsers(usersData['users'].length);
 
         // Fetch last updated times for games, h2h, standings
-        const gamesUpdateResponse = await fetch("http://localhost:8080/games/last-updated");
+        const gamesUpdateResponse = await fetch("https://basketball-backend-dun.vercel.app/games/last-updated");
         const gamesUpdateData = await gamesUpdateResponse.json();
         setLastUpdateGames(gamesUpdateData.lastUpdated);
 
-        const h2hUpdateResponse = await fetch("http://localhost:8080/h2h/last-updated");
+        const h2hUpdateResponse = await fetch("https://basketball-backend-dun.vercel.app/h2h/h2h/last-updated");
         const h2hUpdateData = await h2hUpdateResponse.json();
         setLastUpdateH2h(h2hUpdateData.lastUpdated);
 
-        const standingsUpdateResponse = await fetch("http://localhost:8080/standings/last-updated");
+        const standingsUpdateResponse = await fetch("https://basketball-backend-dun.vercel.app/standings/standings/last-updated");
         const standingsUpdateData = await standingsUpdateResponse.json();
         setLastUpdateStandings(standingsUpdateData.lastUpdated);
 
